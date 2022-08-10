@@ -23,7 +23,7 @@ export function effect(fn) {
 const bucket = new WeakMap()
 // 在 get 拦截属性读取时，调用 track 进行依赖追踪
 export function track(target: object, key: string | symbol) {
-	if (!getActiveEffect()) return target[key]
+	 if (!getActiveEffect()) return 
 	let depsMap = bucket.get(target) // key -> effects
 	if (!depsMap) {
 		bucket.set(target, (depsMap = new Map()))
@@ -82,7 +82,7 @@ export function effect(fn) {
 const bucket = new WeakMap()
 // 在 get 拦截属性读取时，调用 track 进行依赖追踪
 export function track(target: object, key: string | symbol) {
-	if (!getActiveEffect()) return target[key]
+	 if (!getActiveEffect()) return 
 	let depsMap = bucket.get(target) // key -> effects
 	if (!depsMap) {
 		bucket.set(target, (depsMap = new Map()))
@@ -148,7 +148,7 @@ export function effect(fn) {
 const bucket = new WeakMap()
 // 在 get 拦截属性读取时，调用 track 进行依赖追踪
 export function track(target: object, key: string | symbol) {
-	if (!getActiveEffect()) return target[key]
+	 if (!getActiveEffect()) return 
 	let depsMap = bucket.get(target) // key -> effects
 	if (!depsMap) {
 		bucket.set(target, (depsMap = new Map()))
@@ -213,7 +213,7 @@ export function effect(fn) {
 const bucket = new WeakMap()
 // 在 get 拦截属性读取时，调用 track 进行依赖追踪
 export function track(target: object, key: string | symbol) {
-	if (!getActiveEffect()) return target[key]
+	 if (!getActiveEffect()) return 
 	let depsMap = bucket.get(target) // key -> effects
 	if (!depsMap) {
 		bucket.set(target, (depsMap = new Map()))
@@ -288,7 +288,7 @@ export function effect(fn, options: EffectOptions = {}) {
 const bucket = new WeakMap()
 // 在 get 拦截属性读取时，调用 track 进行依赖追踪
 export function track(target: object, key: string | symbol) {
-	if (!getActiveEffect()) return target[key]
+	 if (!getActiveEffect()) return 
 	let depsMap = bucket.get(target) // key -> effects
 	if (!depsMap) {
 		bucket.set(target, (depsMap = new Map()))
@@ -378,7 +378,7 @@ export function effect(fn, options: EffectOptions = {}) {
 const bucket = new WeakMap()
 // 在 get 拦截属性读取时，调用 track 进行依赖追踪
 export function track(target: object, key: string | symbol) {
-	if (!getActiveEffect()) return target[key]
+	if (!getActiveEffect()) return
 	let depsMap = bucket.get(target) // key -> effects
 	if (!depsMap) {
 		bucket.set(target, (depsMap = new Map()))

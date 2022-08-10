@@ -86,7 +86,7 @@ export function reactive(target: object) {
 	return obj
 } */
 
-// 4.5-4.8
+// 4.5-4.9
 import { track, trigger } from './effect'
 export function reactive(target: object) {
 	const obj = new Proxy(target, {
