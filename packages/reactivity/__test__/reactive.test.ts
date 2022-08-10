@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { reactive, effect } from '../src'
+import { computed } from '../src/computed'
 
 describe('reactivity', () => {
 	beforeEach(() => {
@@ -160,5 +161,29 @@ describe('reactivity', () => {
 		await vi.runAllTimers()
 		expect(fn).toHaveBeenCalledTimes(2)
 		expect(obj.age).toBe(3)
+	})
+
+	it('4.8 懒执行 lazy', () => {
+		// 假设传给 effect 的是一个 getter，那么这个 getter 可以返回任何值
+		const effectFn = effect(() => obj.name + obj.age + '岁啦！', {
+			lazy: true,
+		})
+
+		obj.age++
+		// value 是 getter 的一个返回值
+		const value = effectFn()
+		expect(value).toBe(obj.name + obj.age + '岁啦！')
+	})
+
+	it('4.8 计算属性 computed', () => {
+		const fn = vi.fn(() => obj.name + obj.age + '岁啦！')
+		const res = computed(fn)
+		obj.age = 10
+
+		console.log(res.value)
+		console.log(res.value)
+
+		expect(res.value).toBe(obj.name + '10岁啦！')
+		expect(fn).toHaveBeenCalledTimes(1)
 	})
 })
