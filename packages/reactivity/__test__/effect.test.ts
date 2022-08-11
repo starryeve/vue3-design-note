@@ -1,22 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { reactive, effect } from '../src'
-import { computed } from '../src/computed'
-import { watch } from '../src/watch'
 
 describe('reactivity', () => {
 	beforeEach(() => {
 		vi.useFakeTimers()
 	})
-	let dummy
-	let whoHaveNotSpendBirthday = new Set()
-	let obj = reactive({
-		name: 'rain',
-		age: 0,
-		birthdaySpent: false,
-	})
 
 	it('4.2 基本的响应式', () => {
+		let dummy
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
+
 		effect(() => {
 			dummy = obj.name
 		})
@@ -26,6 +24,12 @@ describe('reactivity', () => {
 	})
 
 	it('4.3 effect 只会在与其建立响应式联系的属性发生变化时执行', () => {
+		let dummy
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
 		const fn = vi.fn(() => {
 			dummy = obj.name
 		})
@@ -35,6 +39,12 @@ describe('reactivity', () => {
 	})
 
 	it('4.4 分支切换与 cleanup', () => {
+		let whoHaveNotSpendBirthday = new Set()
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
 		const fn = vi.fn(() => {
 			if (!obj.birthdaySpent) {
 				// 这个副作用仅在某人的生日还没过时才会执行，也就是说，当生日设置为已度过，副作用不应该执行
@@ -51,6 +61,12 @@ describe('reactivity', () => {
 	})
 
 	it('4.5 嵌套的 effect 与 effect 栈', () => {
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
+
 		// 想象一下，这两个 render 就代表了两个嵌套组件的渲染函数
 		let outerRender, innerRender
 		const OuterComp = {
@@ -88,6 +104,11 @@ describe('reactivity', () => {
 	})
 
 	it('4.6 避免无限递归循环', () => {
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
 		let n = 0
 		const fn = () => {
 			obj.age++
@@ -101,6 +122,11 @@ describe('reactivity', () => {
 	})
 
 	it('4.7 调度执行（控制执行顺序）', async () => {
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
 		const arr1 = [],
 			arr2 = []
 		effect(() => {
@@ -125,6 +151,11 @@ describe('reactivity', () => {
 	})
 
 	it('4.7 调度执行（控制执行次数）', async () => {
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
 		const jobQueue = new Set()
 		const p = Promise.resolve()
 
@@ -165,6 +196,11 @@ describe('reactivity', () => {
 	})
 
 	it('4.8 懒执行 lazy', () => {
+		let obj = reactive({
+			name: 'rain',
+			age: 0,
+			birthdaySpent: false,
+		})
 		// 假设传给 effect 的是一个 getter，那么这个 getter 可以返回任何值
 		const effectFn = effect(() => obj.name + obj.age + '岁啦！', {
 			lazy: true,
@@ -174,78 +210,5 @@ describe('reactivity', () => {
 		// value 是 getter 的一个返回值
 		const value = effectFn()
 		expect(value).toBe(obj.name + obj.age + '岁啦！')
-	})
-
-	it('4.8 计算属性 computed', () => {
-		let obj = reactive({
-			name: 'rain',
-			age: 0,
-			birthdaySpent: false,
-		})
-
-		const fn = () => obj.name + obj.age + '岁啦！'
-		const res = computed(fn)
-		obj.age = 10
-
-		console.log(res.value)
-		console.log(res.value)
-
-		expect(res.value).toBe(obj.name + '10岁啦！')
-		// expect(fn).toHaveBeenCalledTimes(1)
-	})
-
-	it('4.9 watch的实现原理', () => {
-		const cb = vi.fn((nv, ov) => {
-			console.log(nv, ov)
-			expect(nv).toBe(1)
-		})
-		watch(() => obj.age, cb)
-
-		obj.age++
-		expect(cb).toHaveBeenCalledTimes(1)
-	})
-
-	it('4.10 立即执行的watch与回调执行时间', () => {
-		const cb = vi.fn((nv, ov) => {
-			console.log(nv, ov)
-		})
-		watch(() => obj.age, cb, {
-			immediate: true,
-		})
-
-		obj.age++
-		expect(cb).toHaveBeenCalledTimes(2)
-	})
-
-	it('4.11 过期的副作用', async () => {
-		async function fakeFetch(path, data) {
-			const p = new Promise((resolve) => {
-				setTimeout(() => resolve(data), 1000 * Math.random())
-			})
-			return p
-		}
-		let finalData
-		const cb = vi.fn(async (nv, ov, onInvalidate) => {
-			let expired = false
-			onInvalidate(() => {
-				expired = true
-			})
-
-			const res = await fakeFetch('/fake/path', obj.age)
-
-			if (!expired) {
-				finalData = res
-			}
-		})
-
-		watch(() => obj.age, cb)
-
-		obj.age++
-		setTimeout(() => {
-			obj.age++
-		}, 200)
-
-		await vi.runAllTimers()
-		expect(obj.age).toBe(2) // 保证res永远是第二次请求返回的结果
 	})
 })

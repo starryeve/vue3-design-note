@@ -88,7 +88,7 @@ export function reactive(target: object) {
 
 // 4.5-4.9
 import { track, trigger } from './effect'
-export function reactive(target: object) {
+export function reactive<T extends object>(target: T): T {
 	const obj = new Proxy(target, {
 		get(target, key) {
 			// 将副作用函数 activeEffect 添加到存储副作用函数的“桶”中
