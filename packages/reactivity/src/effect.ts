@@ -491,8 +491,8 @@ export const enum TriggerType {
 	ADD = 'ADD',
 	DELETE = 'DELETE',
 }
-// 在 set 拦截属性设置时，调用 trigger 触发副作用执行
-export function trigger(target: object, key: string | symbol, type: TriggerType = TriggerType.SET) {
+// 为 trigger 函数增加第四个参数，newVal，即新值
+export function trigger(target: object, key: string | symbol, type: TriggerType = TriggerType.SET, newVal) {
 	const depsMap = bucket.get(target)
 	if (!depsMap) return
 
@@ -511,7 +511,7 @@ export function trigger(target: object, key: string | symbol, type: TriggerType 
 			}
 		})
 
-	// 只有当操作类型为 'ADD' 或 'DELETE' 时，才出发与 ITERATE_KEY 相关联的副作用函数重新执行
+	// 只有当操作类型为 'ADD' 或 'DELETE' 时，才触发与 ITERATE_KEY 相关联的副作用函数重新执行
 	if (type === TriggerType.ADD || type === TriggerType.DELETE) {
 		// 将与 ITERATE_KEY 相关联的副作用函数添加到 effectsToRun
 		iterateEffects &&
@@ -520,6 +520,33 @@ export function trigger(target: object, key: string | symbol, type: TriggerType 
 					effectsToRun.add(effectFn)
 				}
 			})
+	}
+
+	// 当操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关的副作用函数
+	if (type === TriggerType.ADD && Array.isArray(target)) {
+		const lengthEffects = depsMap.get('length')
+		// 将这些副作用函数天添加到 effectToRuns 中，待执行
+		lengthEffects &&
+			lengthEffects.forEach((effectFn) => {
+				if (effectFn !== activeEffect) {
+					effectsToRun.add(effectFn)
+				}
+			})
+	}
+
+	// 如果操作目标是数组，并且修改了数组的 length 属性
+	if (Array.isArray(target) && key === 'length') {
+		// 对于索引大于或等于新的 length 值的元素
+		// 需要把相关联的副作用函数取出并添加到 effectsToRun 中待执行
+		depsMap.forEach((effects, key) => {
+			if (key >= newVal) {
+				effects.forEach((effectFn) => {
+					if (effectFn !== activeEffect) {
+						effectsToRun.add(effectFn)
+					}
+				})
+			}
+		})
 	}
 
 	// 执行 effect 函数

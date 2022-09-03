@@ -113,4 +113,18 @@ describe('reactive', () => {
 
 		expect(obj.foo.bar).toBe(1)
 	})
+
+	it('5.7 代理数组 - length', () => {
+		const arr = reactive(['foo'])
+
+		let arr1
+		const fn = vi.fn(() => {
+			arr1 = arr[1]
+		})
+
+		effect(fn)
+		arr.length = 0
+
+		expect(arr1).toBe(undefined)
+	})
 })
