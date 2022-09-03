@@ -4,12 +4,14 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"test": "vitest packages/"
+		"test": "vitest packages/*",
+		"build": "pnpm --filter=@/* run build"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"jsdom": "^20.0.0",
 		"vitest": "^0.21.0"
 	}
 }
