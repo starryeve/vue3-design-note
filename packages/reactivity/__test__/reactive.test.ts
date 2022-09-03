@@ -114,7 +114,7 @@ describe('reactive', () => {
 		expect(obj.foo.bar).toBe(1)
 	})
 
-	it('5.7 代理数组 - length', () => {
+	it('5.7 代理数组（索引与length）', () => {
 		const arr = reactive(['foo'])
 
 		let arr1
@@ -126,5 +126,52 @@ describe('reactive', () => {
 		arr.length = 0
 
 		expect(arr1).toBe(undefined)
+	})
+
+	it('5.7 代理数组（for...in）', () => {
+		const arr = reactive(['foo'])
+
+		const fn = vi.fn(() => {
+			for (const index in arr) {
+				console.log(index)
+			}
+		})
+
+		effect(fn)
+		arr[1] = 'bar'
+		arr.length = 0
+
+		expect(fn).toHaveBeenCalledTimes(3)
+	})
+
+	it('5.7 代理数组（for...of）', () => {
+		const originArr = [1, 2, 3, 4]
+		originArr[Symbol.iterator] = function () {
+			const target = this
+			const len = target.length
+			let index = 0
+
+			return {
+				next() {
+					return {
+						value: index < len ? target[index] : undefined,
+						done: index++ >= len,
+					}
+				},
+			}
+		}
+
+		const arr = reactive(originArr)
+
+		const fn = vi.fn(() => {
+			for (const val of arr) {
+				console.log(val)
+			}
+		})
+
+		effect(fn)
+		debugger
+		arr[1] = 20
+		expect(fn).toHaveBeenCalledTimes(2)
 	})
 })

@@ -405,10 +405,13 @@ export function createReactive<T extends object>(target: T, isShallow = false, i
 			if (key === 'raw') {
 				return target
 			}
+			// 追加判断。如果 key 的类型是 symbol，则不进行追踪
+			if (!readonly && typeof key !== 'symbol') {
+				// 建立联系
+				track(target, key)
+			}
 			// 得到原始值结果
 			const res = Reflect.get(target, key, receiver)
-			// 建立联系
-			track(target, key)
 
 			// 如果是浅响应
 			if (isShallow) {
@@ -428,7 +431,8 @@ export function createReactive<T extends object>(target: T, isShallow = false, i
 		},
 		// 拦截循环遍历 for in
 		ownKeys(target) {
-			track(target, ITERATOR_KEY)
+			// 如果操作目标 target 是数组，则使用 length 属性作为 key 并建立响应联系
+			track(target, Array.isArray(target) ? 'length' : ITERATOR_KEY)
 			return Reflect.ownKeys(target)
 		},
 		// 拦截设置操作
