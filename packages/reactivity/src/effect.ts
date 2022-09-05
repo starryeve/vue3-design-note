@@ -10,7 +10,7 @@ export function effect(fn) {
 }
 */
 
-import { ITERATOR_KEY } from './reactive'
+import { ITERATOR_KEY, shouldTrack } from './reactive'
 
 /* // 4.3 完善的响应式
 let activeEffect = null
@@ -417,7 +417,7 @@ export function trigger(target: object, key: string | symbol) {
 }
  */
 
-// 5.3 代理 Object
+// 5 代理 Object 和 Array
 interface EffectOptions {
 	lazy?: boolean
 	scheduler?: (effectFn: Function) => void
@@ -471,7 +471,8 @@ export function effect(fn, options: EffectOptions = {}) {
 const bucket = new WeakMap()
 // 在 get 拦截属性读取时，调用 track 进行依赖追踪
 export function track(target: object, key: string | symbol) {
-	if (!getActiveEffect()) return
+	// 当禁止追踪时，直接返回
+	if (!getActiveEffect() || !shouldTrack) return
 	let depsMap = bucket.get(target) // key -> effects
 	if (!depsMap) {
 		bucket.set(target, (depsMap = new Map()))
@@ -492,7 +493,7 @@ export const enum TriggerType {
 	DELETE = 'DELETE',
 }
 // 为 trigger 函数增加第四个参数，newVal，即新值
-export function trigger(target: object, key: string | symbol, type: TriggerType = TriggerType.SET, newVal) {
+export function trigger(target: object, key: string | symbol, type: TriggerType = TriggerType.SET, newVal?) {
 	const depsMap = bucket.get(target)
 	if (!depsMap) return
 
@@ -525,7 +526,7 @@ export function trigger(target: object, key: string | symbol, type: TriggerType 
 	// 当操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关的副作用函数
 	if (type === TriggerType.ADD && Array.isArray(target)) {
 		const lengthEffects = depsMap.get('length')
-		// 将这些副作用函数天添加到 effectToRuns 中，待执行
+		// 将这些副作用函数添加到 effectToRuns 中，待执行
 		lengthEffects &&
 			lengthEffects.forEach((effectFn) => {
 				if (effectFn !== activeEffect) {

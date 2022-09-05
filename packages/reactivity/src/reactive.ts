@@ -310,6 +310,11 @@ export function createReactive<T extends object>(target: T, isShallow = false, i
 			if (key === 'raw') {
 				return target
 			}
+			// 非只读的时候才需要建立响应联系
+			if (!isReadOnly) {
+				// 建立联系
+				track(target, key)
+			}
 			// 得到原始值结果
 			const res = Reflect.get(target, key, receiver)
 			// 建立联系
@@ -397,6 +402,39 @@ export function shallowReadonly<T extends object>(target: T) {
 // 5.7 代理数组
 import { track, trigger, TriggerType } from './effect'
 export const ITERATOR_KEY = Symbol()
+
+const arrayInstrumentations = {}
+;['includes', 'indexOf', 'lastIndexOf'].forEach((method) => {
+	const originMethod = Array.prototype[method]
+	arrayInstrumentations[method] = function (...argus) {
+		// this 是代理对象，现在代理对象中查找，将结果存储到 res 中
+		let res = originMethod.apply(this, argus)
+
+		if (res === false) {
+			// res 为 false 说明没找到，通过 this.raw 拿到原始数组，再去其中查找并更新 res 值
+			res = originMethod.apply(this.raw, argus)
+		}
+
+		// 返回最终结果
+		return res
+	}
+})
+export let shouldTrack = true
+;['push', 'pop', 'shift', 'unshift', 'splice'].forEach((method) => {
+	// 取得原始方法
+	const originMethod = Array.prototype[method]
+	// 重写
+	arrayInstrumentations[method] = function (...argus) {
+		// 在调用原始方法之前，禁止追踪
+		shouldTrack = false
+		// push 方法的默认行为
+		let res = originMethod.push(this, argus)
+		// 在调用原始方法之后，恢复原来的默认行为，即允许追踪
+		shouldTrack = true
+		return res
+	}
+})
+
 export function createReactive<T extends object>(target: T, isShallow = false, isReadOnly = false): T {
 	return new Proxy(target, {
 		// 拦截属性访问
@@ -405,8 +443,13 @@ export function createReactive<T extends object>(target: T, isShallow = false, i
 			if (key === 'raw') {
 				return target
 			}
+			// 如果操作的目标对象是数组，并且 key 存在于 arrayInstrumentations 上，
+			// 那么返回定义在 arrayInstrumentations 上的值
+			if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+				return Reflect.get(arrayInstrumentations, key, receiver)
+			}
 			// 追加判断。如果 key 的类型是 symbol，则不进行追踪
-			if (!readonly && typeof key !== 'symbol') {
+			if (!isReadOnly && typeof key !== 'symbol') {
 				// 建立联系
 				track(target, key)
 			}
@@ -484,8 +527,19 @@ export function createReactive<T extends object>(target: T, isShallow = false, i
 	})
 }
 
+// 定义一个 Map 实例，存储原始对象到代理对象的映射
+export const reactiveMap = new Map()
 export function reactive<T extends object>(target: T) {
-	return createReactive(target)
+	// 优先通过原始对象 obj 寻找之前创建的代理对象，如果找到了，直接返回已有的代理对象
+	const existionProxy = reactiveMap.get(target)
+	if (existionProxy) return existionProxy
+
+	// 否则，创建新的代理对象
+	const proxy = createReactive(target)
+	// 存储到 Map 中，从而避免重复创建
+	reactiveMap.set(target, proxy)
+
+	return proxy
 }
 
 export function shallowReactive<T extends object>(target: T) {

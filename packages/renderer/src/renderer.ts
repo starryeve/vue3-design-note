@@ -332,7 +332,7 @@ const container = {
 renderer.render(vnode, container)
  */
 
-/* // 8.5 卸载操作
+// 8.5 卸载操作
 export interface RendererNode {
 	[key: string]: any
 }
@@ -353,7 +353,7 @@ function createRenderer(options) {
 
 	function mountElement(vnode: VNode, container) {
 		// 调用 createElement 函数创建元素同时让 vnode.el 引用真实 DOM 元素
-		const el = vnode.el = createElement(vnode.type)
+		const el = (vnode.el = createElement(vnode.type))
 
 		// 处理子节点，如果子节点是字符串，代表元素剧透文本节点
 		if (typeof vnode.children === 'string') {
@@ -381,7 +381,7 @@ function createRenderer(options) {
 	}
 
 	function patch(n1, n2, container) {
-		if(n1 && n1.type !== n2.type) {
+		if (n1 && n1.type !== n2.type) {
 			// 如果新旧 vnode 的类型不同，则直接将旧 vnode 卸载
 			unmount(n1)
 			// 卸载完成，n1 还需要置为 null, 才能保证后续挂载操作正确执行
@@ -389,26 +389,25 @@ function createRenderer(options) {
 		}
 
 		// 代码运行到这里，证明 n1 和 n2 所描述的内容相同
-		const {type} = n2
-		if(typeof type ==='string') {
+		const { type } = n2
+		if (typeof type === 'string') {
 			// 描述的是个标签
 			if (!n1) {
 				mountElement(n2, container)
 			} else {
 			}
-		} else if(typeof type === 'object') {
+		} else if (typeof type === 'object') {
 			// 描述的是个组件
 		} else {
 			// 描述的是其他类型的 vnode
 		}
-
 	}
 
 	function unmount(vnode) {
 		// 获取 el 的父元素
 		const parent = vnode.el.parentNode
 		// 调用 removeChild 移除元素
-		if(parent){
+		if (parent) {
 			parent.removeChild(vnode.el)
 		}
 	}
@@ -439,7 +438,7 @@ function shouldSetAsProps(el, key, value) {
 	return key in el
 }
 
-const renderer = createRenderer({
+export const renderer = createRenderer({
 	createElement(tag) {
 		console.log(`创建元素${tag}`)
 		return {
@@ -481,4 +480,4 @@ const container = {
 	type: 'root',
 }
 
-renderer.render(vnode, container) */
+renderer.render(vnode, container)

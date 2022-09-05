@@ -18,7 +18,7 @@ describe('renderer', () => {
 		let dom = document.createElement('div')
 
 		effect(() => {
-			renderer(`<h1>${data.title}</h1>`, dom)
+			renderer.render(`<h1>${data.title}</h1>`, dom)
 		})
 
 		data.title = '2'

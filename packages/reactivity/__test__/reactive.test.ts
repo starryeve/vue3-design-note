@@ -64,7 +64,7 @@ describe('reactive', () => {
 		expect(fn).toHaveBeenCalledTimes(2)
 	})
 
-	it('5.5 浅响应', () => {
+	it('5.5 深响应', () => {
 		const obj = reactive({
 			foo: {
 				bar: 1,
@@ -81,13 +81,14 @@ describe('reactive', () => {
 		expect(fn).toHaveBeenCalledTimes(2)
 	})
 
-	it('5.5 深响应', () => {
+	it('5.5 浅响应', () => {
 		const obj = shallowReactive({
 			foo: {
 				bar: 1,
 			},
 		})
 
+		debugger
 		const fn = vi.fn(() => {
 			console.log(obj.foo.bar)
 		})
@@ -145,33 +146,52 @@ describe('reactive', () => {
 	})
 
 	it('5.7 代理数组（for...of）', () => {
-		const originArr = [1, 2, 3, 4]
-		originArr[Symbol.iterator] = function () {
-			const target = this
-			const len = target.length
-			let index = 0
+		const originArr = [1]
+		// originArr[Symbol.iterator] = function () {
+		// 	const target = this
+		// 	const len = target.length
+		// 	let index = 0
 
-			return {
-				next() {
-					return {
-						value: index < len ? target[index] : undefined,
-						done: index++ >= len,
-					}
-				},
-			}
-		}
+		// 	return {
+		// 		next() {
+		// 			return {
+		// 				value: index < len ? target[index] : undefined,
+		// 				done: index++ >= len,
+		// 			}
+		// 		},
+		// 	}
+		// }
 
 		const arr = reactive(originArr)
 
 		const fn = vi.fn(() => {
-			for (const val of arr) {
+			for (const val in arr) {
 				console.log(val)
 			}
 		})
 
 		effect(fn)
-		debugger
+
 		arr[1] = 20
+
 		expect(fn).toHaveBeenCalledTimes(2)
+	})
+
+	it('5.8 数组的查找方法（避免为同一个原始对象创建多次代理对象）', () => {
+		const obj = {}
+		const arr = reactive([obj])
+
+		const isObjExist = arr.includes(arr[0])
+
+		expect(isObjExist).toBe(true)
+	})
+
+	it('5.8 数组的查找方法（重写 includes，改变 this 指向）', () => {
+		const obj = {}
+		const arr = reactive([obj])
+
+		const isObjExist = arr.includes(obj)
+
+		expect(isObjExist).toBe(true)
 	})
 })
