@@ -529,7 +529,7 @@ export function createReactive<T extends object>(target: T, isShallow = false, i
 
 // 定义一个 Map 实例，存储原始对象到代理对象的映射
 export const reactiveMap = new Map()
-export function reactive<T extends object>(target: T) {
+export function reactive<T extends object>(target: T): T {
 	// 优先通过原始对象 obj 寻找之前创建的代理对象，如果找到了，直接返回已有的代理对象
 	const existionProxy = reactiveMap.get(target)
 	if (existionProxy) return existionProxy
